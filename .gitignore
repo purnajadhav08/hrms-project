@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+staticfiles/
+media/
+.env
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+*.local
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+.idea/
