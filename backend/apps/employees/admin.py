@@ -7,7 +7,7 @@ class EmploymentHistoryInline(admin.TabularInline):
     extra   = 0
     can_delete = False
     readonly_fields = [
-        "employer", "designation", "employment_type",
+        "employer", "client", "customer", "designation", "employment_type",
         "location", "status", "date_of_joining", "exit_date",
         "primary_skills", "secondary_skills",
         "visa_type", "id_status", "e_verify_status",
@@ -21,24 +21,25 @@ class EmploymentHistoryInline(admin.TabularInline):
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     list_display   = [
-        "adf_employee_name", "emp_no", "status", "employer",
+        "full_name", "emp_no", "status", "client",
         "designation", "employment_type", "visa_type", "location", "updated_at"
     ]
     list_filter    = ["status", "employment_type", "visa_type", "gender"]
-    search_fields  = ["emp_no"]
-    ordering       = ["adf_employee_name"]
+    search_fields  = ["emp_no", "first_name", "last_name"]
+    ordering       = ["last_name", "first_name"]
     readonly_fields= ["created_by", "updated_by", "created_at", "updated_at"]
     inlines        = [EmploymentHistoryInline]
 
     fieldsets = (
         ("Identity",    {"fields": (
-            "adf_employee_name", "emp_no", "gender", "dob",
+            "first_name", "middle_name", "last_name",
+            "emp_no", "gender", "dob",
             "retirement_dob", "contact_number",
             "official_email", "personal_email", "address",
         )}),
         ("Employment",  {"fields": (
             "status", "employment_type", "date_of_joining", "exit_date",
-            "employer", "designation",
+            "employer", "client", "customer", "designation",
             "primary_skills", "secondary_skills",
             "location", "worksite_address",
         )}),

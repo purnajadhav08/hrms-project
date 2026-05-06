@@ -1,6 +1,8 @@
 export interface EmploymentHistory {
   id:              number;
   employer:        string;
+  client:          string;
+  customer:        string;
   designation:     string;
   employment_type: string;
   location:        string;
@@ -19,7 +21,10 @@ export interface EmploymentHistory {
 
 export interface Employee {
   id:                number;
-  adf_employee_name: string;
+  first_name:        string;
+  middle_name:       string;
+  last_name:         string;
+  full_name:         string;
   emp_no:            string;
   gender:            string;
   dob:               string | null;
@@ -33,6 +38,8 @@ export interface Employee {
   date_of_joining:   string | null;
   exit_date:         string | null;
   employer:          string;
+  client:            string;
+  customer:          string;
   designation:       string;
   primary_skills:    string;
   secondary_skills:  string;
@@ -52,8 +59,8 @@ export interface DashboardStats {
   total:              number;
   active:             number;
   exited:             number;
-  bench: number;
-  bench_soon: Partial<Employee>[];
+  bench:              number;
+  bench_soon:         Partial<Employee>[];
   visa_breakdown:     { visa_type: string; count: number }[];
   emp_type_breakdown: { employment_type: string; count: number }[];
   top_employers:      { employer: string; count: number }[];

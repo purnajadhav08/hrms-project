@@ -165,7 +165,7 @@ export default function EmployeesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                {["Emp No","Name","Status","Employer","Designation","Type","Visa","Location","Actions"].map(h => (
+                {["Emp No","Name","Status","Client","Designation","Type","Visa","Location","Actions"].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
@@ -177,7 +177,7 @@ export default function EmployeesPage() {
                 <tr key={emp.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-mono text-xs font-semibold text-gray-700">{emp.emp_no}</td>
                   <td className="px-4 py-3">
-                    <p className="font-semibold text-gray-900 whitespace-nowrap">{emp.adf_employee_name}</p>
+                    <p className="font-semibold text-gray-900 whitespace-nowrap">{emp.full_name}</p>
                     <p className="text-xs text-gray-400">{emp.official_email}</p>
                   </td>
                   <td className="px-4 py-3">
@@ -186,7 +186,7 @@ export default function EmployeesPage() {
                       {emp.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{emp.employer || "—"}</td>
+                  <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{emp.client || "—"}</td>
                   <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{emp.designation || "—"}</td>
                   <td className="px-4 py-3">
                     {emp.employment_type
@@ -209,7 +209,7 @@ export default function EmployeesPage() {
                         className="p-1.5 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors" title="Edit">
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => handleDelete(emp.id!, emp.adf_employee_name || "")}
+                      <button onClick={() => handleDelete(emp.id!, emp.full_name || "")}
                         className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors" title="Delete">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

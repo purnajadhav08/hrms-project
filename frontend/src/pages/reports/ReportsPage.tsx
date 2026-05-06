@@ -44,7 +44,7 @@ function EmpTable({ employees }: { employees: any[] }) {
           {employees.map((e: any) => (
             <tr key={e.id} className="hover:bg-gray-50">
               <td className="px-3 py-2.5 font-mono text-xs font-semibold text-gray-700">{e.emp_no}</td>
-              <td className="px-3 py-2.5 font-semibold text-gray-900 whitespace-nowrap">{e.adf_employee_name}</td>
+              <td className="px-3 py-2.5 font-semibold text-gray-900 whitespace-nowrap">{e.full_name}</td>
               <td className="px-3 py-2.5">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-semibold capitalize ${STATUS_COLORS[e.status] || "bg-gray-100 text-gray-600"}`}>
                   {e.status}
@@ -285,7 +285,7 @@ export default function ReportsPage() {
                 <div className="flex flex-wrap gap-2">
                   {data.h1b_bench_alert?.map((e: any) => (
                     <div key={e.id} className="bg-white border border-red-200 rounded-lg px-3 py-2 text-xs">
-                      <p className="font-semibold text-gray-800">{e.adf_employee_name}</p>
+                      <p className="font-semibold text-gray-800">{e.full_name}</p>
                       <p className="text-red-600">{e.emp_no} · {e.location || "—"}</p>
                     </div>
                   ))}
@@ -380,7 +380,7 @@ export default function ReportsPage() {
                       <tr key={e.id} className={`hover:bg-gray-50 ${e.is_h1b_critical ? "bg-red-50" : ""}`}>
                         <td className="px-3 py-2.5 font-mono text-xs font-semibold text-gray-700">{e.emp_no}</td>
                         <td className="px-3 py-2.5">
-                          <p className="font-semibold text-gray-900 whitespace-nowrap">{e.adf_employee_name}</p>
+                          <p className="font-semibold text-gray-900 whitespace-nowrap">{e.full_name}</p>
                           {e.is_h1b_critical && (
                             <span className="text-xs text-red-600 font-semibold">⚠ H1B Critical</span>
                           )}
@@ -425,10 +425,10 @@ export default function ReportsPage() {
             ) : (
               <div className="divide-y divide-gray-100">
                 {data.grouped.map((g: any) => (
-                  <div key={g.employer} className="p-5">
+                  <div key={g.client || g.employer} className="p-5">
                     <div className="flex items-center gap-3 mb-3">
                       <Building2 className="w-4 h-4 text-gray-400" />
-                      <h3 className="font-bold text-gray-800">{g.employer}</h3>
+                      <h3 className="font-bold text-gray-800">{g.client || g.employer}</h3>
                       <span className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold">
                         {g.count} employee{g.count > 1 ? "s" : ""}
                       </span>

@@ -49,7 +49,7 @@ function HistoryCard({ record, index }: { record: EmploymentHistory; index: numb
             style={{ background: "#1e3a5f" }}>{index + 1}</div>
           <div>
             <p className="text-sm font-semibold text-gray-800">
-              {record.employer || "—"} — {record.designation || "—"}
+              {record.client || record.employer || "—"} — {record.designation || "—"}
             </p>
             <p className="text-xs text-gray-400">
               {record.date_of_joining || "?"} → {record.exit_date || "present"} · recorded {new Date(record.recorded_at).toLocaleDateString()}
@@ -61,6 +61,8 @@ function HistoryCard({ record, index }: { record: EmploymentHistory; index: numb
       {open && (
         <div className="px-5 py-4 grid grid-cols-2 md:grid-cols-3 gap-4">
           <InfoRow label="Employer"        value={record.employer} />
+          <InfoRow label="Client"          value={record.client} />
+          <InfoRow label="Customer"        value={record.customer} />
           <InfoRow label="Designation"     value={record.designation} />
           <InfoRow label="Employment Type" value={record.employment_type} />
           <InfoRow label="Location"        value={record.location} />
@@ -161,14 +163,14 @@ export default function EmployeeProfilePage() {
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4 flex items-start gap-5">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-black shrink-0"
           style={{ background: "#1e3a5f" }}>
-          {emp.adf_employee_name?.charAt(0)}
+          {emp.first_name?.charAt(0)}
         </div>
         <div className="flex-1">
           <div className="flex items-start justify-between flex-wrap gap-3">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">{emp.adf_employee_name}</h1>
+              <h1 className="text-xl font-bold text-gray-900">{emp.full_name}</h1>
               <p className="text-sm text-gray-500 mt-0.5">
-                {emp.designation || "—"} · {emp.employer || "—"}
+                {emp.designation || "—"} · {emp.client || emp.employer || "—"}
               </p>
             </div>
             <span className={`text-xs px-3 py-1 rounded-full font-semibold border capitalize
@@ -187,7 +189,9 @@ export default function EmployeeProfilePage() {
 
       {/* Identity */}
       <Section title="Personal Information" icon={User}>
-        <InfoRow label="Full Name"       value={emp.adf_employee_name} />
+        <InfoRow label="First Name"      value={emp.first_name} />
+        <InfoRow label="Middle Name"     value={emp.middle_name} />
+        <InfoRow label="Last Name"       value={emp.last_name} />
         <InfoRow label="Employee No."    value={emp.emp_no} />
         <InfoRow label="Gender"          value={emp.gender} />
         <InfoRow label="Date of Birth"   value={emp.dob} />
@@ -205,6 +209,8 @@ export default function EmployeeProfilePage() {
         <InfoRow label="Status"          value={emp.status} />
         <InfoRow label="Employment Type" value={emp.employment_type} />
         <InfoRow label="Employer"        value={emp.employer} />
+        <InfoRow label="Client"          value={emp.client} />
+        <InfoRow label="Customer"        value={emp.customer} />
         <InfoRow label="Designation"     value={emp.designation} />
         <InfoRow label="Date of Joining" value={emp.date_of_joining} />
         <InfoRow label="Exit Date"       value={emp.exit_date} />

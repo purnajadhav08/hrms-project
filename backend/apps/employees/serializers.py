@@ -10,7 +10,8 @@ class EmploymentHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model  = EmploymentHistory
         fields = [
-            "id", "employer", "designation", "employment_type",
+            "id", "employer", "client", "customer",
+            "designation", "employment_type",
             "location", "worksite_address", "status",
             "date_of_joining", "exit_date",
             "primary_skills", "secondary_skills",
@@ -20,33 +21,43 @@ class EmploymentHistorySerializer(serializers.ModelSerializer):
 
 
 class EmployeeListSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
     class Meta:
         model  = Employee
         fields = [
-            "id", "adf_employee_name", "emp_no", "status",
-            "employment_type", "employer", "designation",
+            "id", "full_name", "first_name", "middle_name", "last_name",
+            "emp_no", "status", "employment_type",
+            "employer", "client", "customer", "designation",
             "primary_skills", "location", "visa_type",
             "date_of_joining", "exit_date",
             "official_email", "contact_number", "updated_at",
         ]
+
+    def get_full_name(self, obj):
+        parts = [obj.first_name, obj.middle_name, obj.last_name]
+        return " ".join(p for p in parts if p).strip()
 
 
 class EmployeeDetailSerializer(serializers.ModelSerializer):
     employment_history = EmploymentHistorySerializer(many=True, read_only=True)
     created_by_name    = serializers.CharField(source="created_by.full_name", read_only=True, default="—")
     updated_by_name    = serializers.CharField(source="updated_by.full_name", read_only=True, default="—")
+    full_name          = serializers.SerializerMethodField()
 
     class Meta:
         model  = Employee
         fields = [
             "id",
             # Identity
-            "adf_employee_name", "emp_no", "gender", "dob", "retirement_dob",
+            "first_name", "middle_name", "last_name", "full_name",
+            "emp_no", "gender", "dob", "retirement_dob",
             "contact_number", "official_email", "personal_email",
             "address", "worksite_address",
             # Employment
             "status", "employment_type", "date_of_joining", "exit_date",
-            "employer", "designation", "primary_skills", "secondary_skills", "location",
+            "employer", "client", "customer",
+            "designation", "primary_skills", "secondary_skills", "location",
             # Visa
             "visa_type", "id_status", "e_verify_status",
             # Audit
@@ -55,27 +66,34 @@ class EmployeeDetailSerializer(serializers.ModelSerializer):
             "employment_history",
         ]
         read_only_fields = [
-            "id", "created_at", "updated_at",
+            "id", "full_name", "created_at", "updated_at",
             "created_by_name", "updated_by_name", "employment_history",
         ]
+
+    def get_full_name(self, obj):
+        parts = [obj.first_name, obj.middle_name, obj.last_name]
+        return " ".join(p for p in parts if p).strip()
+
+    def validate_first_name(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("First name is required.")
+        return value.strip()
+
+    def validate_last_name(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Last name is required.")
+        return value.strip()
 
     def validate_emp_no(self, value):
         if not value or not value.strip():
             raise serializers.ValidationError("Employee number is required.")
         return value.strip().upper()
 
-    def validate_adf_employee_name(self, value):
-        if not value or not value.strip():
-            raise serializers.ValidationError("Employee name is required.")
-        return value.strip()
-
     def validate(self, attrs):
-        # Convert empty optional date strings to None
         for field in ("retirement_dob", "date_of_joining", "exit_date"):
             if attrs.get(field) == "":
                 attrs[field] = None
 
-        # Exit date must be after joining date if both provided
         doj  = attrs.get("date_of_joining")
         exit = attrs.get("exit_date")
         if doj and exit and exit < doj:
@@ -88,13 +106,9 @@ class EmployeeDetailSerializer(serializers.ModelSerializer):
         request    = self.context.get("request")
         changed_by = request.user if request else None
 
-        # Only trigger history when employer (client) or status changes
-        # Option B: client switch OR going to bench/active
-        CLIENT_FIELDS = ["employer", "status"]
-
         needs_history = any(
             str(validated_data.get(f, getattr(instance, f))) != str(getattr(instance, f))
-            for f in CLIENT_FIELDS
+            for f in ["client", "customer", "status"]
             if f in validated_data
         )
 
@@ -108,4 +122,6 @@ class EmployeeDetailSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         validated_data["created_by"] = request.user if request else None
         validated_data["updated_by"] = request.user if request else None
+        if not validated_data.get("employer"):
+            validated_data["employer"] = "CBC Labs"
         return super().create(validated_data)

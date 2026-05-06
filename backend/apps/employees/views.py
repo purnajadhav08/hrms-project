@@ -18,7 +18,7 @@ from .serializers import (
 # ── Filter ────────────────────────────────────────────────────────────────────
 
 class EmployeeFilter(FilterSet):
-    name        = CharFilter(field_name="adf_employee_name", lookup_expr="icontains")
+    name        = CharFilter(method="filter_by_name", label="Name")
     emp_no      = CharFilter(field_name="emp_no",            lookup_expr="icontains")
     employer    = CharFilter(field_name="employer",          lookup_expr="icontains")
     designation = CharFilter(field_name="designation",       lookup_expr="icontains")
@@ -33,6 +33,13 @@ class EmployeeFilter(FilterSet):
     ])
     joined_from = DateFilter(field_name="date_of_joining", lookup_expr="gte")
     joined_to   = DateFilter(field_name="date_of_joining", lookup_expr="lte")
+
+    def filter_by_name(self, queryset, name, value):
+        return queryset.filter(
+            Q(first_name__icontains=value) |
+            Q(middle_name__icontains=value) |
+            Q(last_name__icontains=value)
+        )
 
     class Meta:
         model  = Employee
@@ -124,12 +131,12 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends    = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class    = EmployeeFilter
-    search_fields      = ["emp_no"]
+    search_fields      = ["emp_no", "first_name", "last_name"]
     ordering_fields = [
-        "adf_employee_name", "emp_no", "date_of_joining",
+        "last_name", "first_name", "emp_no", "date_of_joining",
         "status", "employer", "updated_at",
     ]
-    ordering = ["adf_employee_name"]
+    ordering = ["last_name", "first_name"]
 
     def get_queryset(self):
         return Employee.objects.select_related(

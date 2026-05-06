@@ -80,7 +80,7 @@ export default function DashboardPage() {
               <div className="flex flex-wrap gap-2">
                 {stats.bench_soon.map((emp: any) => (
                   <div key={emp.id} className="bg-white border border-amber-200 rounded-lg px-3 py-2 text-xs">
-                    <p className="font-semibold text-gray-800">{emp.adf_employee_name}</p>
+                    <p className="font-semibold text-gray-800">{emp.full_name}</p>
                     <p className="text-amber-700">Exit: {emp.exit_date} · {emp.visa_type || "—"}</p>
                   </div>
                 ))}
@@ -172,7 +172,7 @@ export default function DashboardPage() {
                       onClick={() => navigate(`/employees/${emp.id}`)}
                       className="hover:bg-gray-50 cursor-pointer transition-colors">
                       <td className="px-4 py-3 font-mono text-xs font-semibold text-gray-600">{emp.emp_no}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-900">{emp.adf_employee_name}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900">{emp.full_name}</td>
                       <td className="px-4 py-3 text-gray-500 text-xs">{emp.employer || "—"}</td>
                       <td className="px-4 py-3 text-gray-500 text-xs">{emp.designation || "—"}</td>
                       <td className="px-4 py-3">

@@ -146,10 +146,14 @@ def employee_to_row(emp: Employee) -> dict:
     """Convert Employee to flat dict for export."""
     return {
         "emp_no":           emp.emp_no,
-        "adp_employee_name":emp.adf_employee_name,
+        "first_name":       emp.first_name,
+        "middle_name":      emp.middle_name,
+        "last_name":        emp.last_name,
         "status":           emp.status,
         "employment_type":  emp.employment_type,
         "employer":         emp.employer,
+        "client":           emp.client,
+        "customer":         emp.customer,
         "designation":      emp.designation,
         "date_of_joining":  str(emp.date_of_joining) if emp.date_of_joining else "",
         "exit_date":        str(emp.exit_date)        if emp.exit_date        else "",
@@ -179,7 +183,7 @@ class EmployeeMasterReportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        qs     = apply_filters(request).order_by("adf_employee_name")
+        qs     = apply_filters(request).order_by("last_name", "first_name")
         export = request.GET.get("export", "")
         rows   = [employee_to_row(e) for e in qs]
 
@@ -227,7 +231,7 @@ class VisaStatusReportView(APIView):
 
         if export in ("csv", "excel"):
             rows = []
-            for emp in qs.order_by("visa_type", "adf_employee_name"):
+            for emp in qs.order_by("visa_type", "last_name", "first_name"):
                 row = employee_to_row(emp)
                 row["_alert"] = emp.visa_type == "H1B" and emp.status == "bench"
                 rows.append(row)
@@ -271,7 +275,7 @@ class EmploymentTypeReportView(APIView):
                 })
 
         if export in ("csv", "excel"):
-            rows = [employee_to_row(e) for e in qs.order_by("employment_type", "adf_employee_name")]
+            rows = [employee_to_row(e) for e in qs.order_by("employment_type", "last_name", "first_name")]
             if export == "csv":
                 return to_csv_response(rows, "employment_type_report")
             return to_excel_response(rows, "employment_type_report", "Employment Type")
@@ -306,7 +310,7 @@ class BenchReportView(APIView):
             results.append({
                 "id":               emp.id,
                 "emp_no":           emp.emp_no,
-                "adf_employee_name":emp.adf_employee_name,
+                "full_name":         emp.full_name,
                 "visa_type":        emp.visa_type,
                 "employment_type":  emp.employment_type,
                 "location":         emp.location,
@@ -344,27 +348,29 @@ class ClientReportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        qs     = Employee.objects.filter(status="active").exclude(employer="")
+        qs     = Employee.objects.filter(status="active").exclude(client="")
         export = request.GET.get("export", "")
 
-        # Group by employer
-        employers = qs.values_list("employer", flat=True).distinct().order_by("employer")
-        grouped   = []
-        for emp_name in employers:
-            employees = qs.filter(employer=emp_name)
+        # Group by client
+        clients = qs.values_list("client", flat=True).distinct().order_by("client")
+        grouped = []
+        for client_name in clients:
+            employees = qs.filter(client=client_name)
             grouped.append({
-                "employer": emp_name,
-                "count":    employees.count(),
+                "client":    client_name,
+                "count":     employees.count(),
                 "employees": EmployeeListSerializer(employees, many=True).data,
             })
 
         if export in ("csv", "excel"):
             rows = []
-            for emp in qs.order_by("employer", "adf_employee_name"):
+            for emp in qs.order_by("client", "last_name", "first_name"):
                 rows.append({
                     "employer":         emp.employer,
+                    "client":           emp.client,
+                    "customer":         emp.customer,
                     "emp_no":           emp.emp_no,
-                    "adp_employee_name":emp.adf_employee_name,
+                    "full_name":        emp.full_name,
                     "designation":      emp.designation,
                     "employment_type":  emp.employment_type,
                     "visa_type":        emp.visa_type,
@@ -410,8 +416,10 @@ class EmployeeHistoryReportView(APIView):
         rows.append({
             "record_type":      "CURRENT",
             "emp_no":           employee.emp_no,
-            "adp_employee_name":employee.adf_employee_name,
+            "full_name":        employee.full_name,
             "employer":         employee.employer,
+            "client":           employee.client,
+            "customer":         employee.customer,
             "designation":      employee.designation,
             "employment_type":  employee.employment_type,
             "status":           employee.status,
@@ -433,8 +441,10 @@ class EmployeeHistoryReportView(APIView):
             rows.append({
                 "record_type":      "HISTORY",
                 "emp_no":           employee.emp_no,
-                "adp_employee_name":employee.adf_employee_name,
+                "full_name":        employee.full_name,
                 "employer":         h.employer,
+                "client":           h.client,
+                "customer":         h.customer,
                 "designation":      h.designation,
                 "employment_type":  h.employment_type,
                 "status":           h.status,
@@ -460,7 +470,7 @@ class EmployeeHistoryReportView(APIView):
 
         # JSON response
         return Response({
-            "employee":      employee.adf_employee_name,
+            "employee":      employee.full_name,
             "emp_no":        employee.emp_no,
             "total_records": len(rows),
             "history":       rows,

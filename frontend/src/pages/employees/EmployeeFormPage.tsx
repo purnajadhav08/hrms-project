@@ -3,23 +3,102 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import { employeeService } from "@/services/employeeService";
 
+const LOCATION_OPTIONS = [
+  // US States
+  "Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut",
+  "Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa",
+  "Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan",
+  "Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada",
+  "New Hampshire","New Jersey","New Mexico","New York","North Carolina",
+  "North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island",
+  "South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont",
+  "Virginia","Washington","Washington D.C.","West Virginia","Wisconsin","Wyoming",
+  "Puerto Rico","Guam",
+  // Countries
+  "Afghanistan","Albania","Algeria","Argentina","Armenia","Australia","Austria",
+  "Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium","Bolivia","Brazil",
+  "Bulgaria","Cambodia","Canada","Chile","China","Colombia","Croatia",
+  "Czech Republic","Denmark","Ecuador","Egypt","Estonia","Ethiopia","Finland",
+  "France","Germany","Ghana","Greece","Guatemala","Honduras","Hong Kong",
+  "Hungary","India","Indonesia","Iran","Iraq","Ireland","Israel","Italy",
+  "Japan","Jordan","Kazakhstan","Kenya","Kuwait","Latvia","Lebanon","Libya",
+  "Lithuania","Malaysia","Mexico","Morocco","Myanmar","Nepal","Netherlands",
+  "New Zealand","Nigeria","Norway","Oman","Pakistan","Panama","Peru",
+  "Philippines","Poland","Portugal","Qatar","Romania","Russia","Saudi Arabia",
+  "Serbia","Singapore","Slovakia","Slovenia","South Africa","South Korea",
+  "Spain","Sri Lanka","Sweden","Switzerland","Syria","Taiwan","Thailand",
+  "Tunisia","Turkey","UAE","Ukraine","United Kingdom","United States",
+  "Uruguay","Uzbekistan","Venezuela","Vietnam","Yemen","Zimbabwe","Other",
+].map(l => ({ value: l, label: l }));
+
+const DESIGNATION_OPTIONS = [
+  // IT / Engineering
+  "Software Engineer","Senior Software Engineer","Lead Software Engineer",
+  "Principal Software Engineer","Staff Software Engineer",
+  "Frontend Developer","Backend Developer","Full Stack Developer",
+  "Mobile Developer","iOS Developer","Android Developer",
+  "DevOps Engineer","Cloud Engineer","Site Reliability Engineer (SRE)",
+  "Infrastructure Engineer","Network Engineer","Security Engineer",
+  "Database Administrator (DBA)","System Administrator","IT Support Specialist",
+  "IT Manager","Data Engineer","Data Scientist","Machine Learning Engineer",
+  "AI/ML Engineer","BI Developer","QA Engineer","Senior QA Engineer","QA Lead",
+  "Automation Engineer (SDET)","Solutions Architect","Enterprise Architect",
+  "Cloud Architect","Technical Lead","Engineering Manager","VP of Engineering",
+  "Chief Technology Officer (CTO)","UI/UX Designer","Product Designer",
+  // Project / Program Management
+  "Project Manager","Senior Project Manager","Program Manager","Portfolio Manager",
+  "Delivery Manager","Scrum Master","Agile Coach","Product Owner",
+  // Business Analysis / Consulting
+  "Business Analyst","Senior Business Analyst","Functional Consultant",
+  "ERP Consultant","SAP Consultant","Salesforce Consultant",
+  // Product Management
+  "Product Manager","Senior Product Manager",
+  // HR
+  "HR Executive","HR Specialist","HR Generalist","HR Manager","Senior HR Manager",
+  "Talent Acquisition Specialist","Recruiter","Senior Recruiter",
+  "Technical Recruiter","HR Business Partner",
+  "Compensation & Benefits Specialist","Learning & Development Specialist",
+  "HR Director","VP of Human Resources","Chief People Officer (CPO)",
+  "Payroll Specialist","Payroll Manager","HRIS Analyst",
+  // Finance
+  "Financial Analyst","Senior Financial Analyst","Accountant","Senior Accountant",
+  "Finance Manager","Controller","Chief Financial Officer (CFO)",
+  // Sales & BD
+  "Sales Executive","Business Development Manager","Account Manager",
+  "Key Account Manager","Account Executive","Sales Manager","VP of Sales",
+  // Marketing
+  "Marketing Specialist","Digital Marketing Manager","Content Manager",
+  "Marketing Director","VP of Marketing",
+  // Operations & Leadership
+  "Operations Manager","Director of Operations","VP of Operations",
+  "Chief Operating Officer (COO)","Chief Executive Officer (CEO)",
+  "General Manager","Director","Senior Director","Vice President (VP)",
+  "Senior Vice President (SVP)",
+  // Admin & Legal
+  "Administrative Assistant","Executive Assistant","Office Manager",
+  "Legal Counsel","Compliance Officer","Contracts Manager",
+  // General
+  "Trainee / Intern","Associate Consultant","Consultant","Senior Consultant",
+  "Principal Consultant","Managing Consultant","Other",
+].map(d => ({ value: d, label: d }));
+
 const initialForm = {
-  adf_employee_name: "", emp_no: "",
+  first_name: "", middle_name: "", last_name: "",
+  emp_no: "",
   gender: "", dob: "", retirement_dob: "",
   contact_number: "", official_email: "", personal_email: "",
   address: "", worksite_address: "",
   status: "active", employment_type: "",
   date_of_joining: "", exit_date: "",
-  employer: "", designation: "",
-  primary_skills: "", secondary_skills: "",
+  employer: "CBC Labs",
+  client: "", customer: "",
+  designation: "", primary_skills: "", secondary_skills: "",
   location: "",
   visa_type: "", id_status: "", e_verify_status: "",
 };
 
 type FormData = typeof initialForm;
 const DATE_FIELDS: (keyof FormData)[] = ["dob", "retirement_dob", "date_of_joining", "exit_date"];
-
-// ── Field components defined OUTSIDE to prevent focus loss ───────────────────
 
 function Field({ label, name, type = "text", placeholder = "", required = false, disabled = false, form, onChange }: {
   label: string; name: keyof FormData; type?: string;
@@ -38,7 +117,7 @@ function Field({ label, name, type = "text", placeholder = "", required = false,
         className={`w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm
                    focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white
                    placeholder:text-gray-400 transition-colors
-                   ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : ""}`}
+                   ${disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
       />
     </div>
   );
@@ -93,49 +172,50 @@ function SectionTitle({ title }: { title: string }) {
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
-
 export default function EmployeeFormPage() {
   const { id }   = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEdit   = !!id;
 
-  const [form,         setForm]         = useState<FormData>(initialForm);
-  const [currentlyHere,setCurrentlyHere]= useState(false); // Change 2: currently working toggle
-  const [loading,      setLoading]      = useState(false);
-  const [fetching,     setFetching]     = useState(isEdit);
-  const [error,        setError]        = useState("");
+  const [form,          setForm]          = useState<FormData>(initialForm);
+  const [currentlyHere, setCurrentlyHere] = useState(false);
+  const [loading,       setLoading]       = useState(false);
+  const [fetching,      setFetching]      = useState(isEdit);
+  const [error,         setError]         = useState("");
 
   useEffect(() => {
     if (!isEdit) return;
     employeeService.get(Number(id))
       .then(r => {
         const d = r.data;
-        const noExitDate = !d.exit_date;
-        setCurrentlyHere(noExitDate);
+        setCurrentlyHere(!d.exit_date);
         setForm({
-          adf_employee_name: d.adf_employee_name || "",
-          emp_no:            d.emp_no            || "",
-          gender:            d.gender            || "",
-          dob:               d.dob               || "",
-          retirement_dob:    d.retirement_dob    || "",
-          contact_number:    d.contact_number    || "",
-          official_email:    d.official_email    || "",
-          personal_email:    d.personal_email    || "",
-          address:           d.address           || "",
-          worksite_address:  d.worksite_address  || "",
-          status:            d.status            || "active",
-          employment_type:   d.employment_type   || "",
-          date_of_joining:   d.date_of_joining   || "",
-          exit_date:         d.exit_date         || "",
-          employer:          d.employer          || "",
-          designation:       d.designation       || "",
-          primary_skills:    d.primary_skills    || "",
-          secondary_skills:  d.secondary_skills  || "",
-          location:          d.location          || "",
-          visa_type:         d.visa_type         || "",
-          id_status:         d.id_status         || "",
-          e_verify_status:   d.e_verify_status   || "",
+          first_name:       d.first_name       || "",
+          middle_name:      d.middle_name      || "",
+          last_name:        d.last_name        || "",
+          emp_no:           d.emp_no           || "",
+          gender:           d.gender           || "",
+          dob:              d.dob              || "",
+          retirement_dob:   d.retirement_dob   || "",
+          contact_number:   d.contact_number   || "",
+          official_email:   d.official_email   || "",
+          personal_email:   d.personal_email   || "",
+          address:          d.address          || "",
+          worksite_address: d.worksite_address || "",
+          status:           d.status           || "active",
+          employment_type:  d.employment_type  || "",
+          date_of_joining:  d.date_of_joining  || "",
+          exit_date:        d.exit_date        || "",
+          employer:         d.employer         || "CBC Labs",
+          client:           d.client           || "",
+          customer:         d.customer         || "",
+          designation:      d.designation      || "",
+          primary_skills:   d.primary_skills   || "",
+          secondary_skills: d.secondary_skills || "",
+          location:         d.location         || "",
+          visa_type:        d.visa_type        || "",
+          id_status:        d.id_status        || "",
+          e_verify_status:  d.e_verify_status  || "",
         });
       })
       .catch(() => navigate("/employees"))
@@ -145,7 +225,6 @@ export default function EmployeeFormPage() {
   const handleChange = (key: keyof FormData, value: string) =>
     setForm(prev => ({ ...prev, [key]: value }));
 
-  // When "Currently working here" is toggled ON — clear exit date
   const handleCurrentlyHereToggle = (checked: boolean) => {
     setCurrentlyHere(checked);
     if (checked) handleChange("exit_date", "");
@@ -157,7 +236,6 @@ export default function EmployeeFormPage() {
 
     const payload = { ...form } as any;
     DATE_FIELDS.forEach(f => { if (!payload[f]) payload[f] = null; });
-    // If currently working here — force exit_date to null
     if (currentlyHere) payload.exit_date = null;
 
     try {
@@ -211,20 +289,22 @@ export default function EmployeeFormPage() {
 
             {/* ── Personal Information ─────────────────────────── */}
             <SectionTitle title="Personal Information" />
-            <Field label="ADP Employee Name" name="adf_employee_name" placeholder="Full name" required {...fp} />
-            <Field label="Emp No"             name="emp_no"            placeholder="EMP-001"   required {...fp} />
+            <Field label="First Name"  name="first_name"  placeholder="John"   required {...fp} />
+            <Field label="Middle Name" name="middle_name" placeholder="A."              {...fp} />
+            <Field label="Last Name"   name="last_name"   placeholder="Smith"  required {...fp} />
+            <Field label="Emp No"      name="emp_no"      placeholder="EMP-001" required {...fp} />
             <SelectField label="Gender" name="gender" required options={[
               { value: "M", label: "Male" },
               { value: "F", label: "Female" },
               { value: "O", label: "Other" },
             ]} {...fp} />
-            <Field label="Date of Birth"   name="dob"            type="date" required {...fp} />
-            <Field label="Rehire DOJ"      name="retirement_dob" type="date" {...fp} />
-            <Field label="Contact Number"  name="contact_number" placeholder="+1 555 000 0000" required {...fp} />
-            <Field label="Official Mail ID"   name="official_email" type="email" placeholder="emp@cbcinc.ai"  required {...fp} />
-            <Field label="Personal Email ID"  name="personal_email" type="email" placeholder="emp@gmail.com"  required {...fp} />
+            <Field label="Date of Birth"  name="dob"            type="date" required {...fp} />
+            <Field label="Rehire DOJ"     name="retirement_dob" type="date"          {...fp} />
+            <Field label="Contact Number" name="contact_number" placeholder="+1 555 000 0000" required {...fp} />
+            <Field label="Official Mail ID"  name="official_email" type="email" placeholder="emp@cbcinc.ai"  required {...fp} />
+            <Field label="Personal Email ID" name="personal_email" type="email" placeholder="emp@gmail.com"  required {...fp} />
             <div className="col-span-1 md:col-span-2 lg:col-span-3">
-              <TextAreaField label="Address"           name="address"          placeholder="Street, City, State, ZIP" required {...fp} />
+              <TextAreaField label="Address" name="address" placeholder="Street, City, State, ZIP" required {...fp} />
             </div>
             <div className="col-span-1 md:col-span-2 lg:col-span-3">
               <TextAreaField label="Worksite Address / Location 1" name="worksite_address" placeholder="Client site address" required {...fp} />
@@ -243,12 +323,19 @@ export default function EmployeeFormPage() {
               { value: "1099",     label: "1099"      },
               { value: "fulltime", label: "Full Time" },
             ]} {...fp} />
-            <Field label="Employer"        name="employer"        placeholder="Client company name" {...fp} />
-            <Field label="Designation"     name="designation"     placeholder="Job title"           {...fp} />
-            <Field label="Date of Joining" name="date_of_joining" type="date" {...fp} />
-            <Field label="Location"        name="location"        placeholder="City, State"         required {...fp} />
 
-            {/* ── Exit date with "currently working here" toggle ── */}
+            {/* Employer locked to CBC Labs */}
+            <Field label="Employer" name="employer" disabled {...fp} />
+
+            {/* Client & Customer */}
+            <Field label="Client"   name="client"   placeholder="e.g. Infosys"   {...fp} />
+            <Field label="Customer" name="customer" placeholder="e.g. Accenture" {...fp} />
+
+            <SelectField label="Designation" name="designation" options={DESIGNATION_OPTIONS} {...fp} />
+            <Field       label="Date of Joining" name="date_of_joining" type="date" {...fp} />
+            <SelectField label="Location" name="location" required options={LOCATION_OPTIONS} {...fp} />
+
+            {/* Exit date with "currently working here" toggle */}
             <div className="col-span-1">
               <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
                 Exit Date
