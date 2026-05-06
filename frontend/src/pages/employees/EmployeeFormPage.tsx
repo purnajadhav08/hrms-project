@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, ChevronDown } from "lucide-react";
 import { employeeService } from "@/services/employeeService";
 
 const LOCATION_OPTIONS = [
@@ -119,6 +119,9 @@ function Field({ label, name, type = "text", placeholder = "", required = false,
                    placeholder:text-gray-400 transition-colors
                    ${disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
       />
+      {type === "date" && (
+        <p className="text-xs text-gray-400 mt-1">MM/DD/YYYY</p>
+      )}
     </div>
   );
 }
@@ -129,19 +132,81 @@ function SelectField({ label, name, options, required = false, form, onChange }:
   required?: boolean;
   form: FormData; onChange: (k: keyof FormData, v: string) => void;
 }) {
+  const [open,  setOpen]  = useState(false);
+  const [query, setQuery] = useState("");
+  const ref               = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false); setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  const filtered = query
+    ? options.filter(o => o.label.toLowerCase().includes(query.toLowerCase()))
+    : options;
+
+  const selected = options.find(o => o.value === form[name]);
+
   return (
-    <div>
+    <div ref={ref} className="relative">
       <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
-      <select
-        required={required}
-        value={form[name]} onChange={e => onChange(name, e.target.value)}
-        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white transition-colors">
-        <option value="">— Select —</option>
-        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
+      <button
+        type="button"
+        onClick={() => { setOpen(v => !v); setQuery(""); }}
+        className="w-full flex items-center justify-between px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-left"
+      >
+        <span className={selected ? "text-gray-900" : "text-gray-400"}>
+          {selected?.label || "— Select —"}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+          style={{ top: "100%" }}>
+          {options.length > 6 && (
+            <div className="p-2 border-b border-gray-100">
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search…"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === "Escape") { setOpen(false); setQuery(""); } }}
+                className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+          )}
+          <div className="max-h-52 overflow-y-auto">
+            <div
+              onClick={() => { onChange(name, ""); setOpen(false); setQuery(""); }}
+              className="px-3 py-2 text-sm text-gray-400 cursor-pointer hover:bg-gray-50"
+            >
+              — Select —
+            </div>
+            {filtered.length === 0 ? (
+              <div className="px-3 py-2 text-xs text-gray-400 italic">No matches</div>
+            ) : filtered.map(o => (
+              <div
+                key={o.value}
+                onClick={() => { onChange(name, o.value); setOpen(false); setQuery(""); }}
+                className={`px-3 py-2 text-sm cursor-pointer transition-colors
+                  ${form[name] === o.value
+                    ? "bg-blue-50 text-blue-700 font-medium"
+                    : "text-gray-700 hover:bg-gray-50"}`}
+              >
+                {o.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
