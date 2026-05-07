@@ -1,17 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Upload, X, CheckCircle } from "lucide-react";
 import { poService } from "@/services/offerService";
 
 const init = {
   po_remarks:"", comments:"", sorting:"", company:"", entry_date:"", country:"USA",
   record_created_by:"", msa_po_signed_by:"", remarks:"",
   recruitment_manager:"", candidate_name:"", candidate_email:"", candidate_phone:"",
-  candidate_pay_type:"", candidate_relationship_mgr:"", candidate_visa:"", job_title:"",
+  candidate_dob:"", candidate_ssn:"", candidate_address:"",
+  candidate_pay_type:"", candidate_relationship_mgr:"", candidate_visa:"",
+  implementation_partner:"", job_title:"",
   invoice_start_month:"", invoice_start_dt:"", active_invoice_begin:"", active_invoice_end:"",
   invoice_status:"active", invoice_end_dt:"", invoice_schedule:"", invoice_email:"",
   po_status:"active", po_end_date:"", po_comments:"", contract_info_path:"",
-  billing_type:"", bill_rate:"", candidate_payrate:"", referral_rate:"", net_payment_terms:"",
+  billing_type:"", bill_rate:"", candidate_payrate:"", net_pay:"",
+  referral_rate:"", net_payment_terms:"",
   billable_client_name:"", billable_client_person:"", billable_client_email:"",
   billable_client_phone:"", billable_client_address:"",
   supplier_name:"", second_customer:"", system_integrator:"",
@@ -77,18 +80,29 @@ function SectionTitle({ title }: { title:string }) {
 }
 
 export default function POFormPage() {
-  const { id } = useParams<{ id:string }>();
+  const { id }   = useParams<{ id:string }>();
   const navigate = useNavigate();
   const isEdit   = !!id;
-  const [form, setForm]       = useState<F>(init);
-  const [loading, setLoading] = useState(false);
-  const [fetching,setFetching]= useState(isEdit);
-  const [error, setError]     = useState("");
+  const fileRef  = useRef<HTMLInputElement>(null);
+
+  const [form,           setForm]          = useState<F>(init);
+  const [file,           setFile]          = useState<File | null>(null);
+  const [existingDoc,    setExistingDoc]   = useState<string | null>(null);
+  const [payWhenPaid,    setPayWhenPaid]   = useState(false);
+  const [mutuallyExec,   setMutuallyExec]  = useState(false);
+  const [loading,        setLoading]       = useState(false);
+  const [fetching,       setFetching]      = useState(isEdit);
+  const [error,          setError]         = useState("");
 
   useEffect(() => {
     if (!isEdit) return;
     poService.get(Number(id))
-      .then(r => setForm(Object.fromEntries(Object.keys(init).map(k => [k, r.data[k] ?? ""])) as F))
+      .then(r => {
+        setForm(Object.fromEntries(Object.keys(init).map(k => [k, r.data[k] ?? ""])) as F);
+        setPayWhenPaid(!!r.data.pay_when_paid);
+        setMutuallyExec(!!r.data.mutually_executed);
+        setExistingDoc(r.data.document_url || null);
+      })
       .catch(() => navigate("/po"))
       .finally(() => setFetching(false));
   }, [id]);
@@ -97,15 +111,15 @@ export default function POFormPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(""); setLoading(true);
-    const payload = { ...form } as any;
-    ["entry_date","invoice_start_dt","active_invoice_begin","active_invoice_end",
-     "invoice_end_dt","po_end_date"].forEach(f => { if (!payload[f]) payload[f] = null; });
-    ["bill_rate","candidate_payrate","referral_rate","net_payment_terms"].forEach(f => {
-      if (!payload[f]) payload[f] = null;
-    });
     try {
-      if (isEdit) { await poService.update(Number(id), payload); navigate("/po"); }
-      else        { await poService.create(payload);             navigate("/po"); }
+      const fd = new FormData();
+      Object.entries(form).forEach(([k, v]) => { if (v !== "" && v !== null) fd.append(k, v as string); });
+      fd.append("pay_when_paid",    String(payWhenPaid));
+      fd.append("mutually_executed", String(mutuallyExec));
+      if (file) fd.append("document", file);
+
+      if (isEdit) { await poService.updateForm(Number(id), fd); navigate("/po"); }
+      else        { await poService.createForm(fd);             navigate("/po"); }
     } catch (err: any) {
       const d = err?.response?.data;
       setError(typeof d === "object" ? Object.entries(d).map(([k,v]) => `${k}: ${Array.isArray(v)?v.join(" "):v}`).join(" | ") : "Save failed.");
@@ -148,15 +162,21 @@ export default function POFormPage() {
             <div className="col-span-1 md:col-span-2 lg:col-span-3"><TextArea label="Remarks" name="remarks" placeholder="Additional remarks…" {...fp} /></div>
 
             <SectionTitle title="Candidate Information" />
-            <Field label="Candidate Name *" name="candidate_name" placeholder="John Smith" required {...fp} />
+            <Field label="Candidate Name *" name="candidate_name"  placeholder="John Smith"        required {...fp} />
             <Field label="Candidate Email"  name="candidate_email" type="email" placeholder="john@gmail.com" {...fp} />
-            <Field label="Candidate Phone"  name="candidate_phone" placeholder="+1 555 000 0000" {...fp} />
+            <Field label="Candidate Phone"  name="candidate_phone" placeholder="+1 555 000 0000"   {...fp} />
+            <Field label="Date of Birth"    name="candidate_dob"   type="date"                     {...fp} />
+            <Field label="SSN"              name="candidate_ssn"   placeholder="XXX-XX-XXXX"       {...fp} />
+            <div className="col-span-1 md:col-span-2 lg:col-span-3">
+              <TextArea label="Candidate Residential Address" name="candidate_address" placeholder="123 Main St, Edison NJ 08817" {...fp} />
+            </div>
             <SelectField label="Candidate Pay Type" name="candidate_pay_type" options={[
               {value:"w2",label:"W2"},{value:"c2c",label:"C2C"},{value:"na",label:"NA"},
             ]} {...fp} />
-            <Field label="Candidate Visa"   name="candidate_visa"  placeholder="H1B / GC / USC…" {...fp} />
-            <Field label="Job Title"        name="job_title"        placeholder="SQL Developer" {...fp} />
-            <Field label="Relationship Manager" name="candidate_relationship_mgr" placeholder="Sanghraj" {...fp} />
+            <Field label="Candidate Visa"        name="candidate_visa"            placeholder="H1B / GC / USC…"     {...fp} />
+            <Field label="Implementation Partner" name="implementation_partner"   placeholder="Hexaware Technologies" {...fp} />
+            <Field label="Job Title"             name="job_title"                 placeholder="SQL Developer"        {...fp} />
+            <Field label="Relationship Manager"  name="candidate_relationship_mgr" placeholder="Sanghraj"           {...fp} />
 
             <SectionTitle title="Invoice Details" />
             <Field label="Invoice Start Month" name="invoice_start_month" placeholder="Sep-23" {...fp} />
@@ -185,8 +205,19 @@ export default function POFormPage() {
             ]} {...fp} />
             <Field label="Bill Rate ($)"         name="bill_rate"         type="number" placeholder="65.00" {...fp} />
             <Field label="Candidate Payrate ($)" name="candidate_payrate" type="number" placeholder="50.00" {...fp} />
-            <Field label="Referral Rate ($)"     name="referral_rate"     type="number" placeholder="5.00" {...fp} />
+            <Field label="Net Pay ($)"           name="net_pay"           type="number" placeholder="48.00" {...fp} />
+            <Field label="Referral Rate ($)"     name="referral_rate"     type="number" placeholder="5.00"  {...fp} />
             <Field label="Net Payment Terms (days)" name="net_payment_terms" type="number" placeholder="45" {...fp} />
+            {/* Pay When Paid toggle */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Pay When Paid</label>
+              <button type="button" onClick={() => setPayWhenPaid(p => !p)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border transition-colors
+                  ${payWhenPaid ? "bg-green-50 border-green-300 text-green-700" : "bg-gray-50 border-gray-300 text-gray-500"}`}>
+                <CheckCircle className={`w-4 h-4 ${payWhenPaid ? "text-green-500" : "text-gray-300"}`} />
+                {payWhenPaid ? "Yes" : "No"}
+              </button>
+            </div>
 
             <SectionTitle title="Client Chain" />
             <Field label="Billable Client Name"    name="billable_client_name"   placeholder="Raps Consulting Inc" {...fp} />
@@ -207,6 +238,44 @@ export default function POFormPage() {
             <Field label="End Client Person"      name="end_client_person"      placeholder="Phillips" {...fp} />
             <Field label="End Client Email"       name="end_client_email"       type="email" placeholder="jphillips@client.com" {...fp} />
             <Field label="End Client Phone"       name="end_client_phone"       placeholder="314-447-2800" {...fp} />
+
+            <SectionTitle title="Contract" />
+            {/* Mutually Executed */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Mutually Executed</label>
+              <button type="button" onClick={() => setMutuallyExec(p => !p)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border transition-colors
+                  ${mutuallyExec ? "bg-green-50 border-green-300 text-green-700" : "bg-gray-50 border-gray-300 text-gray-500"}`}>
+                <CheckCircle className={`w-4 h-4 ${mutuallyExec ? "text-green-500" : "text-gray-300"}`} />
+                {mutuallyExec ? "Yes" : "No"}
+              </button>
+            </div>
+            {/* Document upload */}
+            <div className="col-span-1 md:col-span-2">
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">Upload Document</label>
+              <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg"
+                onChange={e => setFile(e.target.files?.[0] || null)} className="hidden" />
+              <div className="flex items-center gap-3 flex-wrap">
+                <button type="button" onClick={() => fileRef.current?.click()}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+                  <Upload className="w-4 h-4" />
+                  {file ? "Change File" : existingDoc ? "Replace File" : "Upload File"}
+                </button>
+                {file && (
+                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                    <span className="text-sm text-blue-700 font-medium">{file.name}</span>
+                    <button type="button" onClick={() => { setFile(null); if (fileRef.current) fileRef.current.value = ""; }}>
+                      <X className="w-4 h-4 text-blue-400 hover:text-blue-600" />
+                    </button>
+                  </div>
+                )}
+                {!file && existingDoc && (
+                  <a href={existingDoc} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline font-medium">
+                    View current document
+                  </a>
+                )}
+              </div>
+            </div>
 
             <SectionTitle title="Work Location" />
             <SelectField label="Work Location Type" name="work_location_type" options={[

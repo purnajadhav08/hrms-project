@@ -16,6 +16,8 @@ import OffersPage           from "@/pages/offers/OffersPage";
 import OfferFormPage        from "@/pages/offers/OfferFormPage";
 import POPage               from "@/pages/po/POPage";
 import POFormPage           from "@/pages/po/POFormPage";
+import MSAPage              from "@/pages/msa/MSAPage";
+import MSAFormPage          from "@/pages/msa/MSAFormPage";
 
 import { useAuthStore } from "@/store/authStore";
 import { authService }  from "@/services/authService";
@@ -41,6 +43,9 @@ function AnimatedRoutes() {
         <Route path="/po"                  element={<POPage />} />
         <Route path="/po/new"              element={<POFormPage />} />
         <Route path="/po/:id/edit"         element={<POFormPage />} />
+        <Route path="/msa"                 element={<MSAPage />} />
+        <Route path="/msa/new"             element={<MSAFormPage />} />
+        <Route path="/msa/:id/edit"        element={<MSAFormPage />} />
         <Route path="/reports"             element={<ReportsPage />} />
       </Route>
 
@@ -57,6 +62,9 @@ function AnimatedRoutes() {
         <Route path="/po"                  element={<POPage />} />
         <Route path="/po/new"              element={<POFormPage />} />
         <Route path="/po/:id/edit"         element={<POFormPage />} />
+        <Route path="/msa"                 element={<MSAPage />} />
+        <Route path="/msa/new"             element={<MSAFormPage />} />
+        <Route path="/msa/:id/edit"        element={<MSAFormPage />} />
         <Route path="/reports"             element={<ReportsPage />} />
       </Route>
 

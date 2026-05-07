@@ -1,12 +1,13 @@
 from rest_framework import serializers
-from .models import PurchaseOrder
+from .models import MSA
 
-class POSerializer(serializers.ModelSerializer):
+
+class MSASerializer(serializers.ModelSerializer):
     created_by_name = serializers.CharField(source="created_by.full_name", read_only=True, default="—")
     document_url    = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model  = PurchaseOrder
+        model  = MSA
         fields = "__all__"
         read_only_fields = ["id", "created_at", "updated_at", "created_by", "created_by_name", "document_url"]
 
@@ -17,15 +18,9 @@ class POSerializer(serializers.ModelSerializer):
         return None
 
     def validate(self, attrs):
-        for f in ["entry_date","invoice_start_dt","active_invoice_begin","active_invoice_end",
-                  "invoice_end_dt","po_end_date","candidate_dob"]:
+        for f in ["date_of_execution", "msa_start_date", "msa_end_date"]:
             if attrs.get(f) == "":
                 attrs[f] = None
-        for f in ["bill_rate","candidate_payrate","referral_rate","net_pay"]:
-            if attrs.get(f) == "":
-                attrs[f] = None
-        if attrs.get("net_payment_terms") == "":
-            attrs["net_payment_terms"] = None
         return attrs
 
     def create(self, validated_data):

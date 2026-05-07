@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, UserCog, LogOut, BarChart2, FileText, FileCheck } from "lucide-react";
+import { LayoutDashboard, Users, UserCog, LogOut, BarChart2, FileText, FileCheck, FileSignature } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 export default function Sidebar() {
@@ -11,7 +11,8 @@ export default function Sidebar() {
     { to: isAdmin ? "/admin/dashboard" : "/hr/dashboard", icon: LayoutDashboard, label: "Dashboard"      },
     { to: "/employees",                                    icon: Users,           label: "Employees"      },
     { to: "/offers",                                       icon: FileText,        label: "Offer Letters"  },
-    { to: "/po",                                           icon: FileCheck,       label: "PO / MSA"       },
+    { to: "/po",                                           icon: FileCheck,       label: "Purchase Orders" },
+    { to: "/msa",                                          icon: FileSignature,   label: "MSA"            },
     { to: "/reports",                                      icon: BarChart2,       label: "Reports"        },
     ...(isAdmin ? [{ to: "/admin/hrs", icon: UserCog, label: "HR Management" }] : []),
   ];

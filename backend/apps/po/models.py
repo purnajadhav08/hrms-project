@@ -32,9 +32,13 @@ class PurchaseOrder(models.Model):
     candidate_name           = models.CharField(max_length=200, verbose_name="Candidate Name")
     candidate_email          = models.EmailField(blank=True, verbose_name="Candidate Email ID")
     candidate_phone          = models.CharField(max_length=50, blank=True, verbose_name="Candidate Phone")
+    candidate_dob            = models.DateField(null=True, blank=True, verbose_name="Candidate DOB")
+    candidate_ssn            = models.CharField(max_length=20, blank=True, verbose_name="SSN")
+    candidate_address        = models.TextField(blank=True, verbose_name="Candidate Residential Address")
     candidate_pay_type       = models.CharField(max_length=10, choices=PAY_TYPE_CHOICES, blank=True)
     candidate_relationship_mgr= models.CharField(max_length=150, blank=True, verbose_name="Candidate Relationship Manager")
     candidate_visa           = models.CharField(max_length=20, blank=True, verbose_name="Candidate Visa")
+    implementation_partner   = models.CharField(max_length=200, blank=True, verbose_name="Implementation Partner")
     job_title                = models.CharField(max_length=150, blank=True)
 
     # ── Invoice Details ───────────────────────────────────────────
@@ -57,6 +61,8 @@ class PurchaseOrder(models.Model):
     billing_type        = models.CharField(max_length=20, choices=BILLING_TYPE_CHOICES, blank=True)
     bill_rate           = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Bill Rate")
     candidate_payrate   = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Candidate Payrate (if hourly)")
+    net_pay             = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Net Pay")
+    pay_when_paid       = models.BooleanField(default=False, verbose_name="Pay When Paid")
     referral_rate       = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     net_payment_terms   = models.IntegerField(null=True, blank=True, verbose_name="Net Payment Terms (days)")
 
@@ -80,6 +86,10 @@ class PurchaseOrder(models.Model):
     work_location_type      = models.CharField(max_length=20, choices=WORK_MODE_CHOICES, blank=True)
     work_location_state     = models.CharField(max_length=100, blank=True)
     work_location_address   = models.TextField(blank=True)
+
+    # ── Contract ──────────────────────────────────────────────────
+    mutually_executed   = models.BooleanField(default=False, verbose_name="Mutually Executed")
+    document            = models.FileField(upload_to="po_docs/", null=True, blank=True, verbose_name="Upload Document")
 
     # ── Audit ─────────────────────────────────────────────────────
     created_by  = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="pos_created")
