@@ -165,7 +165,7 @@ export default function EmployeesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                {["Emp No","Name","Status","Client","Designation","Type","Visa","Location","Actions"].map(h => (
+                {["Emp No","Name","Status","End Client","Designation","Type","Visa","Location","Actions"].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
@@ -186,7 +186,7 @@ export default function EmployeesPage() {
                       {emp.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{emp.client || "—"}</td>
+                  <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{emp.end_client || "—"}</td>
                   <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{emp.designation || "—"}</td>
                   <td className="px-4 py-3">
                     {emp.employment_type

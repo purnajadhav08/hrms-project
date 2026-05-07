@@ -259,10 +259,11 @@ class Employee(models.Model):
     employment_type   = models.CharField(max_length=20, choices=EMPLOYMENT_TYPE_CHOICES, verbose_name="Employment Type")
     date_of_joining   = models.DateField(null=True, blank=True, verbose_name="DOJ")
     exit_date         = models.DateField(null=True, blank=True, verbose_name="Exit Date")
-    employer          = models.CharField(max_length=150, default="CBC Labs", verbose_name="Employer")
-    client            = models.CharField(max_length=150, blank=True, verbose_name="Client")
-    customer          = models.CharField(max_length=150, blank=True, verbose_name="Customer")
-    designation       = models.CharField(max_length=200, blank=True, choices=DESIGNATION_CHOICES, verbose_name="Designation")
+    employer                 = models.CharField(max_length=150, default="CBC Labs", verbose_name="Employer")
+    vendor                   = models.CharField(max_length=150, blank=True, verbose_name="Vendor")
+    implementation_partners  = models.JSONField(default=list, blank=True, verbose_name="Implementation Partners")
+    end_client               = models.CharField(max_length=150, blank=True, verbose_name="End Client")
+    designation              = models.CharField(max_length=200, blank=True, choices=DESIGNATION_CHOICES, verbose_name="Designation")
     primary_skills    = models.TextField(blank=True, verbose_name="Primary Skills")
     secondary_skills  = models.TextField(blank=True, verbose_name="Secondary Skills")
     location          = models.CharField(max_length=200, choices=LOCATION_CHOICES, verbose_name="Location")
@@ -278,8 +279,8 @@ class Employee(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # History triggered when client, customer, or status changes
-    HISTORY_FIELDS = ["client", "customer", "status"]
+    # History triggered when vendor chain or status changes
+    HISTORY_FIELDS = ["vendor", "implementation_partners", "end_client", "status"]
 
     class Meta:
         ordering     = ["last_name", "first_name"]
@@ -296,11 +297,12 @@ class Employee(models.Model):
 
     def save_history_snapshot(self, changed_by=None):
         EmploymentHistory.objects.create(
-            employee         = self,
-            employer         = self.employer,
-            client           = self.client,
-            customer         = self.customer,
-            designation      = self.designation,
+            employee                = self,
+            employer                = self.employer,
+            vendor                  = self.vendor,
+            implementation_partners = self.implementation_partners,
+            end_client              = self.end_client,
+            designation             = self.designation,
             employment_type  = self.employment_type,
             location         = self.location,
             worksite_address = self.worksite_address,
@@ -318,10 +320,11 @@ class Employee(models.Model):
 
 class EmploymentHistory(models.Model):
     employee         = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name="employment_history")
-    employer         = models.CharField(max_length=150, blank=True)
-    client           = models.CharField(max_length=150, blank=True)
-    customer         = models.CharField(max_length=150, blank=True)
-    designation      = models.CharField(max_length=200, blank=True)
+    employer                = models.CharField(max_length=150, blank=True)
+    vendor                  = models.CharField(max_length=150, blank=True)
+    implementation_partners = models.JSONField(default=list, blank=True)
+    end_client              = models.CharField(max_length=150, blank=True)
+    designation             = models.CharField(max_length=200, blank=True)
     employment_type  = models.CharField(max_length=20,  blank=True)
     location         = models.CharField(max_length=200, blank=True)
     worksite_address = models.TextField(blank=True)
@@ -342,4 +345,4 @@ class EmploymentHistory(models.Model):
         verbose_name_plural = "Employment Histories"
 
     def __str__(self):
-        return f"{self.employee.full_name} — {self.client or self.employer or '—'} ({self.recorded_at.strftime('%Y-%m-%d')})"
+        return f"{self.employee.full_name} — {self.end_client or self.vendor or self.employer or '—'} ({self.recorded_at.strftime('%Y-%m-%d')})"

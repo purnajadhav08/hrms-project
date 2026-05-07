@@ -91,7 +91,7 @@ const initialForm = {
   status: "active", employment_type: "",
   date_of_joining: "", exit_date: "",
   employer: "CBC Labs",
-  client: "", customer: "",
+  vendor: "", end_client: "",
   designation: "", primary_skills: "", secondary_skills: "",
   location: "",
   visa_type: "", id_status: "", e_verify_status: "",
@@ -243,6 +243,7 @@ export default function EmployeeFormPage() {
   const isEdit   = !!id;
 
   const [form,          setForm]          = useState<FormData>(initialForm);
+  const [partners,      setPartners]      = useState<string[]>([]);
   const [currentlyHere, setCurrentlyHere] = useState(false);
   const [loading,       setLoading]       = useState(false);
   const [fetching,      setFetching]      = useState(isEdit);
@@ -254,6 +255,7 @@ export default function EmployeeFormPage() {
       .then(r => {
         const d = r.data;
         setCurrentlyHere(!d.exit_date);
+        setPartners(d.implementation_partners || []);
         setForm({
           first_name:       d.first_name       || "",
           middle_name:      d.middle_name      || "",
@@ -272,8 +274,8 @@ export default function EmployeeFormPage() {
           date_of_joining:  d.date_of_joining  || "",
           exit_date:        d.exit_date        || "",
           employer:         d.employer         || "CBC Labs",
-          client:           d.client           || "",
-          customer:         d.customer         || "",
+          vendor:           d.vendor           || "",
+          end_client:       d.end_client       || "",
           designation:      d.designation      || "",
           primary_skills:   d.primary_skills   || "",
           secondary_skills: d.secondary_skills || "",
@@ -290,6 +292,11 @@ export default function EmployeeFormPage() {
   const handleChange = (key: keyof FormData, value: string) =>
     setForm(prev => ({ ...prev, [key]: value }));
 
+  const addPartner    = () => setPartners(p => [...p, ""]);
+  const removePartner = (i: number) => setPartners(p => p.filter((_, idx) => idx !== i));
+  const updatePartner = (i: number, v: string) => setPartners(p => p.map((x, idx) => idx === i ? v : x));
+  const setNA         = () => setPartners(["N/A"]);
+
   const handleCurrentlyHereToggle = (checked: boolean) => {
     setCurrentlyHere(checked);
     if (checked) handleChange("exit_date", "");
@@ -299,7 +306,7 @@ export default function EmployeeFormPage() {
     e.preventDefault();
     setError(""); setLoading(true);
 
-    const payload = { ...form } as any;
+    const payload = { ...form, implementation_partners: partners } as any;
     DATE_FIELDS.forEach(f => { if (!payload[f]) payload[f] = null; });
     if (currentlyHere) payload.exit_date = null;
 
@@ -392,9 +399,46 @@ export default function EmployeeFormPage() {
             {/* Employer locked to CBC Labs */}
             <Field label="Employer" name="employer" disabled {...fp} />
 
-            {/* Client & Customer */}
-            <Field label="Client"   name="client"   placeholder="e.g. Infosys"   {...fp} />
-            <Field label="Customer" name="customer" placeholder="e.g. Accenture" {...fp} />
+            {/* Vendor */}
+            <Field label="Vendor" name="vendor" placeholder="e.g. Raps Consulting Inc" {...fp} />
+
+            {/* Implementation Partners — dynamic list */}
+            <div className="col-span-1 md:col-span-2 lg:col-span-3">
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
+                Implementation Partner(s)
+              </label>
+              <div className="space-y-2">
+                {partners.map((p, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={p}
+                      onChange={e => updatePartner(i, e.target.value)}
+                      placeholder="e.g. Hexaware"
+                      className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                    <button type="button" onClick={() => removePartner(i)}
+                      className="px-3 py-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 text-sm font-semibold transition-colors">
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <div className="flex gap-2 mt-1">
+                  <button type="button" onClick={addPartner}
+                    className="px-3 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 text-xs font-semibold transition-colors">
+                    + Add Partner
+                  </button>
+                  <button type="button" onClick={setNA}
+                    disabled={partners[0] === "N/A"}
+                    className="px-3 py-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 text-xs font-semibold transition-colors disabled:opacity-40">
+                    N/A
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* End Client */}
+            <Field label="End Client" name="end_client" placeholder="e.g. Jenninson Associates" {...fp} />
 
             <SelectField label="Designation" name="designation" options={DESIGNATION_OPTIONS} {...fp} />
             <Field       label="Date of Joining" name="date_of_joining" type="date" {...fp} />

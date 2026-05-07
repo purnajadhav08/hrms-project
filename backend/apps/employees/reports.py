@@ -151,10 +151,11 @@ def employee_to_row(emp: Employee) -> dict:
         "last_name":        emp.last_name,
         "status":           emp.status,
         "employment_type":  emp.employment_type,
-        "employer":         emp.employer,
-        "client":           emp.client,
-        "customer":         emp.customer,
-        "designation":      emp.designation,
+        "employer":                 emp.employer,
+        "vendor":                   emp.vendor,
+        "implementation_partners":  ", ".join(emp.implementation_partners) if emp.implementation_partners else "N/A",
+        "end_client":               emp.end_client,
+        "designation":              emp.designation,
         "date_of_joining":  str(emp.date_of_joining) if emp.date_of_joining else "",
         "exit_date":        str(emp.exit_date)        if emp.exit_date        else "",
         "location":         emp.location,
@@ -348,14 +349,14 @@ class ClientReportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        qs     = Employee.objects.filter(status="active").exclude(client="")
+        qs     = Employee.objects.filter(status="active").exclude(end_client="")
         export = request.GET.get("export", "")
 
-        # Group by client
-        clients = qs.values_list("client", flat=True).distinct().order_by("client")
+        # Group by end client
+        clients = qs.values_list("end_client", flat=True).distinct().order_by("end_client")
         grouped = []
         for client_name in clients:
-            employees = qs.filter(client=client_name)
+            employees = qs.filter(end_client=client_name)
             grouped.append({
                 "client":    client_name,
                 "count":     employees.count(),
@@ -364,12 +365,13 @@ class ClientReportView(APIView):
 
         if export in ("csv", "excel"):
             rows = []
-            for emp in qs.order_by("client", "last_name", "first_name"):
+            for emp in qs.order_by("end_client", "last_name", "first_name"):
                 rows.append({
-                    "employer":         emp.employer,
-                    "client":           emp.client,
-                    "customer":         emp.customer,
-                    "emp_no":           emp.emp_no,
+                    "employer":                 emp.employer,
+                    "vendor":                   emp.vendor,
+                    "implementation_partners":  ", ".join(emp.implementation_partners) if emp.implementation_partners else "N/A",
+                    "end_client":               emp.end_client,
+                    "emp_no":                   emp.emp_no,
                     "full_name":        emp.full_name,
                     "designation":      emp.designation,
                     "employment_type":  emp.employment_type,
@@ -417,10 +419,11 @@ class EmployeeHistoryReportView(APIView):
             "record_type":      "CURRENT",
             "emp_no":           employee.emp_no,
             "full_name":        employee.full_name,
-            "employer":         employee.employer,
-            "client":           employee.client,
-            "customer":         employee.customer,
-            "designation":      employee.designation,
+            "employer":                 employee.employer,
+            "vendor":                   employee.vendor,
+            "implementation_partners":  ", ".join(employee.implementation_partners) if employee.implementation_partners else "N/A",
+            "end_client":               employee.end_client,
+            "designation":              employee.designation,
             "employment_type":  employee.employment_type,
             "status":           employee.status,
             "date_of_joining":  str(employee.date_of_joining) if employee.date_of_joining else "",
@@ -442,10 +445,11 @@ class EmployeeHistoryReportView(APIView):
                 "record_type":      "HISTORY",
                 "emp_no":           employee.emp_no,
                 "full_name":        employee.full_name,
-                "employer":         h.employer,
-                "client":           h.client,
-                "customer":         h.customer,
-                "designation":      h.designation,
+                "employer":                 h.employer,
+                "vendor":                   h.vendor,
+                "implementation_partners":  ", ".join(h.implementation_partners) if h.implementation_partners else "N/A",
+                "end_client":               h.end_client,
+                "designation":              h.designation,
                 "employment_type":  h.employment_type,
                 "status":           h.status,
                 "date_of_joining":  str(h.date_of_joining) if h.date_of_joining else "",

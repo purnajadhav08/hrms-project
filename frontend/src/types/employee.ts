@@ -1,9 +1,10 @@
 export interface EmploymentHistory {
   id:              number;
-  employer:        string;
-  client:          string;
-  customer:        string;
-  designation:     string;
+  employer:                string;
+  vendor:                  string;
+  implementation_partners: string[];
+  end_client:              string;
+  designation:             string;
   employment_type: string;
   location:        string;
   worksite_address:string;
@@ -37,10 +38,11 @@ export interface Employee {
   employment_type:   string;
   date_of_joining:   string | null;
   exit_date:         string | null;
-  employer:          string;
-  client:            string;
-  customer:          string;
-  designation:       string;
+  employer:                string;
+  vendor:                  string;
+  implementation_partners: string[];
+  end_client:              string;
+  designation:             string;
   primary_skills:    string;
   secondary_skills:  string;
   location:          string;

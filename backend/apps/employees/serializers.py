@@ -10,7 +10,7 @@ class EmploymentHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model  = EmploymentHistory
         fields = [
-            "id", "employer", "client", "customer",
+            "id", "employer", "vendor", "implementation_partners", "end_client",
             "designation", "employment_type",
             "location", "worksite_address", "status",
             "date_of_joining", "exit_date",
@@ -28,7 +28,7 @@ class EmployeeListSerializer(serializers.ModelSerializer):
         fields = [
             "id", "full_name", "first_name", "middle_name", "last_name",
             "emp_no", "status", "employment_type",
-            "employer", "client", "customer", "designation",
+            "employer", "vendor", "implementation_partners", "end_client", "designation",
             "primary_skills", "location", "visa_type",
             "date_of_joining", "exit_date",
             "official_email", "contact_number", "updated_at",
@@ -56,7 +56,7 @@ class EmployeeDetailSerializer(serializers.ModelSerializer):
             "address", "worksite_address",
             # Employment
             "status", "employment_type", "date_of_joining", "exit_date",
-            "employer", "client", "customer",
+            "employer", "vendor", "implementation_partners", "end_client",
             "designation", "primary_skills", "secondary_skills", "location",
             # Visa
             "visa_type", "id_status", "e_verify_status",
@@ -108,7 +108,7 @@ class EmployeeDetailSerializer(serializers.ModelSerializer):
 
         needs_history = any(
             str(validated_data.get(f, getattr(instance, f))) != str(getattr(instance, f))
-            for f in ["client", "customer", "status"]
+            for f in ["vendor", "implementation_partners", "end_client", "status"]
             if f in validated_data
         )
 

@@ -7,7 +7,8 @@ class EmploymentHistoryInline(admin.TabularInline):
     extra   = 0
     can_delete = False
     readonly_fields = [
-        "employer", "client", "customer", "designation", "employment_type",
+        "employer", "vendor", "implementation_partners", "end_client",
+        "designation", "employment_type",
         "location", "status", "date_of_joining", "exit_date",
         "primary_skills", "secondary_skills",
         "visa_type", "id_status", "e_verify_status",
@@ -21,7 +22,7 @@ class EmploymentHistoryInline(admin.TabularInline):
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     list_display   = [
-        "full_name", "emp_no", "status", "client",
+        "full_name", "emp_no", "status", "end_client",
         "designation", "employment_type", "visa_type", "location", "updated_at"
     ]
     list_filter    = ["status", "employment_type", "visa_type", "gender"]
@@ -39,7 +40,7 @@ class EmployeeAdmin(admin.ModelAdmin):
         )}),
         ("Employment",  {"fields": (
             "status", "employment_type", "date_of_joining", "exit_date",
-            "employer", "client", "customer", "designation",
+            "employer", "vendor", "implementation_partners", "end_client", "designation",
             "primary_skills", "secondary_skills",
             "location", "worksite_address",
         )}),

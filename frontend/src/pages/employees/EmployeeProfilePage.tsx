@@ -49,7 +49,7 @@ function HistoryCard({ record, index }: { record: EmploymentHistory; index: numb
             style={{ background: "#1e3a5f" }}>{index + 1}</div>
           <div>
             <p className="text-sm font-semibold text-gray-800">
-              {record.client || record.employer || "—"} — {record.designation || "—"}
+              {record.end_client || record.vendor || record.employer || "—"} — {record.designation || "—"}
             </p>
             <p className="text-xs text-gray-400">
               {record.date_of_joining || "?"} → {record.exit_date || "present"} · recorded {new Date(record.recorded_at).toLocaleDateString()}
@@ -60,10 +60,11 @@ function HistoryCard({ record, index }: { record: EmploymentHistory; index: numb
       </button>
       {open && (
         <div className="px-5 py-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-          <InfoRow label="Employer"        value={record.employer} />
-          <InfoRow label="Client"          value={record.client} />
-          <InfoRow label="Customer"        value={record.customer} />
-          <InfoRow label="Designation"     value={record.designation} />
+          <InfoRow label="Employer"               value={record.employer} />
+          <InfoRow label="Vendor"                value={record.vendor} />
+          <InfoRow label="End Client"            value={record.end_client} />
+          <InfoRow label="Implementation Partners" value={record.implementation_partners.join(", ")} />
+          <InfoRow label="Designation"           value={record.designation} />
           <InfoRow label="Employment Type" value={record.employment_type} />
           <InfoRow label="Location"        value={record.location} />
           <InfoRow label="Status"          value={record.status} />
@@ -170,7 +171,7 @@ export default function EmployeeProfilePage() {
             <div>
               <h1 className="text-xl font-bold text-gray-900">{emp.full_name}</h1>
               <p className="text-sm text-gray-500 mt-0.5">
-                {emp.designation || "—"} · {emp.client || emp.employer || "—"}
+                {emp.designation || "—"} · {emp.end_client || emp.vendor || emp.employer || "—"}
               </p>
             </div>
             <span className={`text-xs px-3 py-1 rounded-full font-semibold border capitalize
@@ -208,10 +209,11 @@ export default function EmployeeProfilePage() {
       <Section title="Current Employment" icon={Briefcase}>
         <InfoRow label="Status"          value={emp.status} />
         <InfoRow label="Employment Type" value={emp.employment_type} />
-        <InfoRow label="Employer"        value={emp.employer} />
-        <InfoRow label="Client"          value={emp.client} />
-        <InfoRow label="Customer"        value={emp.customer} />
-        <InfoRow label="Designation"     value={emp.designation} />
+        <InfoRow label="Employer"               value={emp.employer} />
+        <InfoRow label="Vendor"                value={emp.vendor} />
+        <InfoRow label="End Client"            value={emp.end_client} />
+        <InfoRow label="Implementation Partners" value={emp.implementation_partners.join(", ")} />
+        <InfoRow label="Designation"           value={emp.designation} />
         <InfoRow label="Date of Joining" value={emp.date_of_joining} />
         <InfoRow label="Exit Date"       value={emp.exit_date} />
         <InfoRow label="Location"        value={emp.location} />
