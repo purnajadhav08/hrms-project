@@ -4,11 +4,11 @@ from django.db import migrations, models
 def migrate_client_to_vendor(apps, schema_editor):
     Employee = apps.get_model("employees", "Employee")
     EmploymentHistory = apps.get_model("employees", "EmploymentHistory")
-    for emp in Employee.objects.all():
+    for emp in Employee.objects.order_by("pk"):
         emp.vendor     = emp.client or ""
         emp.end_client = emp.customer or ""
         emp.save(update_fields=["vendor", "end_client"])
-    for hist in EmploymentHistory.objects.all():
+    for hist in EmploymentHistory.objects.order_by("pk"):
         hist.vendor     = hist.client or ""
         hist.end_client = hist.customer or ""
         hist.save(update_fields=["vendor", "end_client"])
