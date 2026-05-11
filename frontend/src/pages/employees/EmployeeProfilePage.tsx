@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Pencil, User, Briefcase, ShieldCheck,
-  Mail, Phone, MapPin, Calendar, Clock, ChevronDown, ChevronUp, Download
+  Mail, Phone, MapPin, Calendar, Clock, ChevronDown, ChevronUp, Download,
+  FileCheck, FileSignature
 } from "lucide-react";
 import { employeeService } from "@/services/employeeService";
 import api from "@/services/apiClient";
@@ -97,6 +98,8 @@ export default function EmployeeProfilePage() {
   const [emp,          setEmp]          = useState<Employee | null>(null);
   const [loading,      setLoading]      = useState(true);
   const [exportLoading,setExportLoading]= useState<"excel"|"csv"|null>(null);
+  const [linkedPOs,    setLinkedPOs]    = useState<any[]>([]);
+  const [linkedMSAs,   setLinkedMSAs]   = useState<any[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -104,6 +107,8 @@ export default function EmployeeProfilePage() {
       .then(r => setEmp(r.data))
       .catch(() => navigate("/employees"))
       .finally(() => setLoading(false));
+    api.get("/po/",  { params: { employee: id } }).then(r => setLinkedPOs(r.data.results  ?? r.data));
+    api.get("/msa/", { params: { employee: id } }).then(r => setLinkedMSAs(r.data.results ?? r.data));
   }, [id]);
 
   const handleExport = async (type: "excel" | "csv") => {
@@ -268,6 +273,128 @@ export default function EmployeeProfilePage() {
             {emp.employment_history.map((record, i) => (
               <HistoryCard key={record.id} record={record} index={i} />
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Linked Purchase Orders */}
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-4">
+          <FileCheck className="w-4 h-4 text-gray-500" />
+          <h2 className="text-base font-bold text-gray-800">Purchase Orders</h2>
+          <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium">
+            {linkedPOs.length} records
+          </span>
+          <button onClick={() => navigate(`/po/new`)}
+            className="ml-auto text-xs px-3 py-1 rounded-lg font-semibold text-white"
+            style={{ background: "#1e3a5f" }}>
+            + New PO
+          </button>
+        </div>
+        {!linkedPOs.length ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
+            <p className="text-gray-400 text-sm">No purchase orders linked to this employee yet.</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  {["Billable Client","End Client","PO Status","Bill Rate","Pay Type","PO End Date","Invoice Status"].map(h => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {linkedPOs.map(po => (
+                  <tr key={po.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/po/${po.id}/edit`)}>
+                    <td className="px-4 py-3 text-gray-700 text-xs font-semibold whitespace-nowrap">{po.billable_client_name || "—"}</td>
+                    <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{po.end_client_name || "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold capitalize
+                        ${po.po_status === "active" ? "bg-green-100 text-green-700"
+                        : po.po_status === "expired" ? "bg-red-100 text-red-700"
+                        : "bg-amber-100 text-amber-700"}`}>
+                        {po.po_status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-xs font-semibold">{po.bill_rate ? `$${po.bill_rate}` : "—"}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {po.candidate_pay_type
+                        ? <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium uppercase">{po.candidate_pay_type}</span>
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{po.po_end_date || "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold capitalize
+                        ${po.invoice_status === "active" ? "bg-green-100 text-green-700"
+                        : po.invoice_status === "expired" ? "bg-red-100 text-red-700"
+                        : "bg-amber-100 text-amber-700"}`}>
+                        {po.invoice_status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Linked MSAs */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <FileSignature className="w-4 h-4 text-gray-500" />
+          <h2 className="text-base font-bold text-gray-800">MSA Records</h2>
+          <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-medium">
+            {linkedMSAs.length} records
+          </span>
+          <button onClick={() => navigate(`/msa/new`)}
+            className="ml-auto text-xs px-3 py-1 rounded-lg font-semibold text-white"
+            style={{ background: "#1e3a5f" }}>
+            + New MSA
+          </button>
+        </div>
+        {!linkedMSAs.length ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
+            <p className="text-gray-400 text-sm">No MSA records linked to this employee yet.</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  {["Vendor","Client","Mutually Executed","Validity","End Date","Status"].map(h => (
+                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {linkedMSAs.map(msa => (
+                  <tr key={msa.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/msa/${msa.id}/edit`)}>
+                    <td className="px-4 py-3 text-gray-700 text-xs font-semibold whitespace-nowrap">{msa.vendor_name}</td>
+                    <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">{msa.client_name || "—"}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {msa.mutually_executed
+                        ? <span className="text-green-600 font-semibold">Yes</span>
+                        : <span className="text-gray-400">No</span>}
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      {msa.msa_validity
+                        ? <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium capitalize">{msa.msa_validity.replace("_"," ")}</span>
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">{msa.msa_end_date || "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold capitalize
+                        ${msa.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                        {msa.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

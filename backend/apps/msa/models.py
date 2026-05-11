@@ -59,6 +59,15 @@ class MSA(models.Model):
     vendor_poc3_email = models.EmailField(blank=True, verbose_name="Vendor POC 3 Email")
     vendor_poc3_phone = models.CharField(max_length=30,  blank=True, verbose_name="Vendor POC 3 Phone")
 
+    # ── HR Link ───────────────────────────────────────────────────
+    employee   = models.ForeignKey(
+        "employees.Employee",
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="msas",
+        verbose_name="Employee (HR)",
+    )
+
     # ── Audit ─────────────────────────────────────────────────────
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="msas_created")
     created_at = models.DateTimeField(auto_now_add=True)

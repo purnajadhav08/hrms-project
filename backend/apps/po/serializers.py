@@ -2,13 +2,16 @@ from rest_framework import serializers
 from .models import PurchaseOrder
 
 class POSerializer(serializers.ModelSerializer):
-    created_by_name = serializers.CharField(source="created_by.full_name", read_only=True, default="—")
-    document_url    = serializers.SerializerMethodField(read_only=True)
+    created_by_name  = serializers.CharField(source="created_by.full_name",  read_only=True, default="—")
+    employee_name    = serializers.CharField(source="employee.full_name",     read_only=True, default=None)
+    employee_emp_no  = serializers.CharField(source="employee.emp_no",        read_only=True, default=None)
+    document_url     = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model  = PurchaseOrder
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "updated_at", "created_by", "created_by_name", "document_url"]
+        read_only_fields = ["id", "created_at", "updated_at", "created_by", "created_by_name",
+                             "employee_name", "employee_emp_no", "document_url"]
 
     def get_document_url(self, obj):
         if obj.document:

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Upload, X, CheckCircle } from "lucide-react";
 import { msaService } from "@/services/msaService";
+import EmployeeSearchDropdown from "@/components/EmployeeSearchDropdown";
 
 const init = {
   vendor_name: "", client_name: "", supplier_name: "", fein_number: "", vendor_address: "",
@@ -94,6 +95,7 @@ export default function MSAFormPage() {
   const [form,        setForm]        = useState<F>(init);
   const [file,        setFile]        = useState<File | null>(null);
   const [existingDoc, setExistingDoc] = useState<string | null>(null);
+  const [selectedEmp, setSelectedEmp] = useState<any | null>(null);
   const [loading,     setLoading]     = useState(false);
   const [fetching,    setFetching]    = useState(isEdit);
   const [error,       setError]       = useState("");
@@ -120,6 +122,7 @@ export default function MSAFormPage() {
         if (v === "" || v === null || v === undefined) return;
         fd.append(k, typeof v === "boolean" ? String(v) : v);
       });
+      if (selectedEmp) fd.append("employee", String(selectedEmp.id));
       if (file) fd.append("document", file);
 
       if (isEdit) { await msaService.update(Number(id), fd); }
@@ -149,6 +152,8 @@ export default function MSAFormPage() {
       <form onSubmit={handleSubmit}>
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <EmployeeSearchDropdown value={selectedEmp} onChange={setSelectedEmp} />
 
             <SectionTitle title="Core Details" />
             <Field label="Vendor Name *"  name="vendor_name"  placeholder="Raps Consulting Inc"        required {...fp} />

@@ -10,7 +10,7 @@ class MSAViewSet(viewsets.ModelViewSet):
     serializer_class = MSASerializer
     permission_classes = [IsAuthenticated]
     filter_backends  = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ["status", "msa_validity", "mutually_executed"]
+    filterset_fields = ["status", "msa_validity", "mutually_executed", "employee"]
     search_fields    = ["vendor_name", "client_name", "supplier_name", "fein_number"]
     ordering_fields  = ["created_at", "date_of_execution", "msa_end_date", "vendor_name"]
 

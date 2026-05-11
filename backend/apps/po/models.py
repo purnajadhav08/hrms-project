@@ -91,6 +91,15 @@ class PurchaseOrder(models.Model):
     mutually_executed   = models.BooleanField(default=False, verbose_name="Mutually Executed")
     document            = models.FileField(upload_to="po_docs/", null=True, blank=True, verbose_name="Upload Document")
 
+    # ── HR Link ───────────────────────────────────────────────────
+    employee    = models.ForeignKey(
+        "employees.Employee",
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="purchase_orders",
+        verbose_name="Employee (HR)",
+    )
+
     # ── Audit ─────────────────────────────────────────────────────
     created_by  = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="pos_created")
     created_at  = models.DateTimeField(auto_now_add=True)

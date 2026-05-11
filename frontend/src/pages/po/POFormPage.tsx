@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save, Upload, X, CheckCircle } from "lucide-react";
 import { poService } from "@/services/offerService";
+import EmployeeSearchDropdown from "@/components/EmployeeSearchDropdown";
 
 const init = {
   po_remarks:"", comments:"", sorting:"", company:"", entry_date:"", country:"USA",
@@ -90,6 +91,7 @@ export default function POFormPage() {
   const [existingDoc,    setExistingDoc]   = useState<string | null>(null);
   const [payWhenPaid,    setPayWhenPaid]   = useState(false);
   const [mutuallyExec,   setMutuallyExec]  = useState(false);
+  const [selectedEmp,    setSelectedEmp]   = useState<any | null>(null);
   const [loading,        setLoading]       = useState(false);
   const [fetching,       setFetching]      = useState(isEdit);
   const [error,          setError]         = useState("");
@@ -109,13 +111,32 @@ export default function POFormPage() {
 
   const handleChange = (k: keyof F, v: string) => setForm(p => ({ ...p, [k]: v }));
 
+  const handleEmployeeSelect = (emp: any | null) => {
+    setSelectedEmp(emp);
+    if (!emp) return;
+    setForm(p => ({
+      ...p,
+      candidate_name:    emp.full_name        || p.candidate_name,
+      candidate_email:   emp.official_email   || p.candidate_email,
+      candidate_phone:   emp.contact_number   || p.candidate_phone,
+      candidate_dob:     emp.dob              || p.candidate_dob,
+      candidate_visa:    emp.visa_type        || p.candidate_visa,
+      candidate_address: emp.address          || p.candidate_address,
+      job_title:         emp.designation      || p.job_title,
+      implementation_partner: (emp.implementation_partners ?? []).join(", ") || p.implementation_partner,
+      end_client_name:   emp.end_client       || p.end_client_name,
+      billable_client_name: emp.vendor        || p.billable_client_name,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(""); setLoading(true);
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => { if (v !== "" && v !== null) fd.append(k, v as string); });
-      fd.append("pay_when_paid",    String(payWhenPaid));
+      fd.append("pay_when_paid",     String(payWhenPaid));
       fd.append("mutually_executed", String(mutuallyExec));
+      if (selectedEmp) fd.append("employee", String(selectedEmp.id));
       if (file) fd.append("document", file);
 
       if (isEdit) { await poService.updateForm(Number(id), fd); navigate("/po"); }
@@ -144,6 +165,8 @@ export default function POFormPage() {
       <form onSubmit={handleSubmit}>
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <EmployeeSearchDropdown value={selectedEmp} onChange={handleEmployeeSelect} />
 
             <SectionTitle title="Admin & Tracking" />
             <Field label="Company (CBC)" name="company" placeholder="CloudBC / Apptad Inc" {...fp} />
