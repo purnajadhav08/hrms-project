@@ -27,11 +27,11 @@ class EmployeeListSerializer(serializers.ModelSerializer):
         model  = Employee
         fields = [
             "id", "full_name", "first_name", "middle_name", "last_name",
-            "emp_no", "status", "employment_type",
+            "emp_no", "gender", "dob", "status", "employment_type",
             "employer", "vendor", "implementation_partners", "end_client", "designation",
-            "primary_skills", "location", "visa_type",
+            "primary_skills", "location", "visa_type", "address",
             "date_of_joining", "exit_date",
-            "official_email", "contact_number", "updated_at",
+            "official_email", "personal_email", "contact_number", "updated_at",
         ]
 
     def get_full_name(self, obj):

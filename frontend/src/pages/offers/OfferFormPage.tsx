@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import { offerService } from "@/services/offerService";
+import EmployeeSearchDropdown from "@/components/EmployeeSearchDropdown";
 
 const init = {
   candidate_id:"", candidate_full_name:"", gender:"", contact_number:"", personal_email:"",
@@ -72,10 +73,11 @@ export default function OfferFormPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEdit   = !!id;
-  const [form,     setForm]     = useState<F>(init);
-  const [loading,  setLoading]  = useState(false);
-  const [fetching, setFetching] = useState(isEdit);
-  const [error,    setError]    = useState("");
+  const [form,        setForm]        = useState<F>(init);
+  const [selectedEmp, setSelectedEmp] = useState<any | null>(null);
+  const [loading,     setLoading]     = useState(false);
+  const [fetching,    setFetching]    = useState(isEdit);
+  const [error,       setError]       = useState("");
 
   useEffect(() => {
     if (!isEdit) return;
@@ -92,11 +94,31 @@ export default function OfferFormPage() {
 
   const handleChange = (k: keyof F, v: string) => setForm(p => ({ ...p, [k]: v }));
 
+  const handleEmployeeSelect = (emp: any | null) => {
+    setSelectedEmp(emp);
+    if (!emp) return;
+    const empTypeMap:   Record<string, string> = { W2: "w2", C2C: "c2c", "1099": "c2c", FullTime: "fulltime" };
+    const genderMap:    Record<string, string> = { M: "Male", F: "Female", O: "Other" };
+    setForm(p => ({
+      ...p,
+      candidate_id:        emp.emp_no                          || p.candidate_id,
+      candidate_full_name: emp.full_name                       || p.candidate_full_name,
+      contact_number:      emp.contact_number                  || p.contact_number,
+      personal_email:      emp.personal_email                  || p.personal_email,
+      gender:              genderMap[emp.gender] || emp.gender || p.gender,
+      current_location:    emp.address                         || p.current_location,
+      visa_type:           emp.visa_type                       || p.visa_type,
+      job_title:           emp.designation                     || p.job_title,
+      offer_type:          empTypeMap[emp.employment_type]     || p.offer_type,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(""); setLoading(true);
     const payload = { ...form } as any;
     ["offer_released_date","date_of_joining"].forEach(f => { if (!payload[f]) payload[f] = null; });
     if (!payload.salary_pay_rate) payload.salary_pay_rate = null;
+    if (selectedEmp) payload.employee = selectedEmp.id;
     try {
       if (isEdit) { await offerService.update(Number(id), payload); navigate("/offers"); }
       else        { await offerService.create(payload);             navigate("/offers"); }
@@ -124,6 +146,8 @@ export default function OfferFormPage() {
       <form onSubmit={handleSubmit}>
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <EmployeeSearchDropdown value={selectedEmp} onChange={handleEmployeeSelect} />
 
             <SectionTitle title="Candidate Information" />
             <Field label="Candidate ID *"    name="candidate_id"        placeholder="CBC-2026-001" required {...fp} />

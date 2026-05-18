@@ -76,6 +76,12 @@ class Offer(models.Model):
     recruiter_name      = models.CharField(max_length=150, blank=True)
     account_manager     = models.CharField(max_length=150, blank=True)
 
+    # ── HR Employee Link ──────────────────────────────────────────
+    employee    = models.ForeignKey(
+        "employees.Employee", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="offers"
+    )
+
     # ── Audit ─────────────────────────────────────────────────────
     created_by  = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="offers_created")
     created_at  = models.DateTimeField(auto_now_add=True)

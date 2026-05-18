@@ -9,7 +9,7 @@ class OfferViewSet(viewsets.ModelViewSet):
     serializer_class = OfferSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ["offer_status", "offer_type", "visa_type", "employment_type", "work_mode"]
+    filterset_fields = ["offer_status", "offer_type", "visa_type", "employment_type", "work_mode", "employee"]
     search_fields    = ["candidate_id", "candidate_full_name", "personal_email"]
     ordering_fields  = ["created_at", "offer_released_date", "candidate_full_name"]
 

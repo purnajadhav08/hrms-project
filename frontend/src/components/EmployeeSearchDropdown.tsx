@@ -6,8 +6,10 @@ interface EmployeeOption {
   id: number;
   full_name: string;
   emp_no: string;
+  gender: string;
   designation: string;
   official_email: string;
+  personal_email: string;
   contact_number: string;
   dob: string | null;
   visa_type: string;
